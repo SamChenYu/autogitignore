@@ -10,27 +10,62 @@ script_dir = Path(__file__).resolve().parent
 
 
 langs = ["c++", "java", "python", "javascript", "unity"]
-lang_files = {}
+langs_extensions = {
+    "c++": [".cpp", ".h", ".hpp", ".c"],
+    "java": [".java"],
+    "python": [".py"],
+    "javascript": [".js", ".jsx"],
+    "unity": [".cs", ".unity", ".prefab"]
+}
+ignore_templates = {}
 for lang in langs:
+    # init the ignore_templates dictionary with the path to the .gitignore template for each language
     dir = os.path.join(script_dir, "templates/" + lang, ".gitignore")
     if(os.path.exists(dir) and os.path.isfile(dir)):
-        lang_files[lang] = dir
+        ignore_templates[lang] = dir
     else:
         print("Error: " + lang + " .gitignore file not found in " + dir)
         exit()
 
-if (len(args) < 2) or (args[1] == "-h") or (args[1] == "--help"):
-    print("Usage:")
-    print("  auto-gitignore.py <language>...")
+if(len(args) == 1):
+    # auto detect the language by looking for files in the current directory
+    content = ""
+    found_langs = set()
+    # find all files in the current directory and its subdirectories
+    for root, dirs, files in os.walk(cwd):
+        for file in files:
+            file_ext = os.path.splitext(file)[1]
+            for lang, extensions in langs_extensions.items():
+                if file_ext in extensions:
+                    gitignore_dir = ignore_templates.get(lang)
+                    if gitignore_dir is not None:
+                        with open(gitignore_dir, "r") as f:
+                            content += f.read() + "\n"
+                    found_langs.add(lang)    
+                    break
+    if content == "":
+        print("No supported language files found in the current directory.")
+        exit()
+    with open(os.path.join(cwd, ".gitignore"), "w") as f:
+        f.write(content)
+    print("Successfully created .gitignore for the detected languages: " + ", ".join(found_langs))
+    exit()  
+
+if (args[1] == "-h") or (args[1] == "--help"):
+    print("=== Auto Gitignore ===\n")
+    print("Auto detect languages and create .gitignore:")
+    print("  auto-gitignore.py\n")
+    print("Specifed languages syntax:")
+    print("  auto-gitignore.py <language>...\n")
     print("Available languages:")
     for lang in langs:
-        print("  --" + lang)
+        print(" " + lang)
     exit()
 
 if(len(args) == 2):
-    # just copy the file to the current directory
-    requested_lang = args[1][2:]
-    gitignore_dir = lang_files.get(requested_lang)
+    # only one language, just write the content of the template to .gitignore
+    requested_lang = args[1]
+    gitignore_dir = ignore_templates.get(requested_lang)
     if gitignore_dir is None:
         print("Error: Language " + requested_lang + " not supported.")
         exit()
@@ -45,8 +80,8 @@ if(len(args) == 2):
 else:
     content = ""
     for i in range(1, len(args)):
-        requested_lang = args[i][2:]
-        gitignore_dir = lang_files.get(requested_lang)
+        requested_lang = args[i]
+        gitignore_dir = ignore_templates.get(requested_lang)
         if gitignore_dir is None:
             print("Error: Language " + requested_lang + " not supported.")
             exit()
