@@ -6,3 +6,10 @@ autogitignore c++ java # multiple langs concatenated into the ignore file
 autogitignore --help # supported langs and usage
 
 ```
+
+If languages are not supported, it will fetch templates from GitHub
+
+Note: Web requests may need the web certificates to pull github .gitignore files:
+``` shell
+python3 -m pip install --upgrade certifi
+```
