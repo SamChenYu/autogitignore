@@ -2,19 +2,17 @@ import os
 import sys
 from pathlib import Path
 
-
 args = sys.argv
 
 cwd = os.getcwd()
 script_dir = Path(__file__).resolve().parent
-
 
 langs = ["c++", "java", "python", "javascript", "unity"]
 langs_extensions = {
     "c++": [".cpp", ".h", ".hpp", ".c"],
     "java": [".java"],
     "python": [".py"],
-    "javascript": [".js", ".jsx"],
+    "javascript": [".js", ".jsx", ".ts", ".tsx"],
     "unity": [".cs", ".unity", ".prefab"]
 }
 ignore_templates = {}
@@ -26,6 +24,10 @@ for lang in langs:
     else:
         print("Error: " + lang + " .gitignore file not found in " + dir)
         exit()
+# abbreviations
+ignore_templates["js"] = ignore_templates["javascript"]
+ignore_templates["typescript"] = ignore_templates["javascript"]
+ignore_templates["ts"] = ignore_templates["javascript"]
 
 if(len(args) == 1):
     # auto detect the language by looking for files in the current directory
@@ -33,6 +35,8 @@ if(len(args) == 1):
     found_langs = set()
     # find all files in the current directory and its subdirectories
     for root, dirs, files in os.walk(cwd):
+        # Remove directories that should be ignored
+        dirs[:] = [d for d in dirs if d not in ("node_modules", "vendor", "bin", "obj")]
         for file in files:
             file_ext = os.path.splitext(file)[1]
             for lang, extensions in langs_extensions.items():
@@ -64,7 +68,7 @@ if (args[1] == "-h") or (args[1] == "--help"):
 
 if(len(args) == 2):
     # only one language, just write the content of the template to .gitignore
-    requested_lang = args[1]
+    requested_lang = args[1].lower()
     gitignore_dir = ignore_templates.get(requested_lang)
     if gitignore_dir is None:
         print("Error: Language " + requested_lang + " not supported.")
@@ -80,7 +84,7 @@ if(len(args) == 2):
 else:
     content = ""
     for i in range(1, len(args)):
-        requested_lang = args[i]
+        requested_lang = args[i].lower()
         gitignore_dir = ignore_templates.get(requested_lang)
         if gitignore_dir is None:
             print("Error: Language " + requested_lang + " not supported.")
