@@ -58,7 +58,7 @@ if(len(args) == 1):
     # find all files in the current directory and its subdirectories
     for root, dirs, files in os.walk(cwd):
         # Remove directories that should be ignored
-        dirs[:] = [d for d in dirs if d not in ("node_modules", "vendor", "bin", "obj")]
+        dirs[:] = [d for d in dirs if d not in ("node_modules", "vendor", "bin", "obj", "venv")]
         for file in files:
             file_ext = os.path.splitext(file)[1]
             for lang, extensions in langs_extensions.items():
